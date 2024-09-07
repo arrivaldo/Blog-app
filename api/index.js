@@ -13,7 +13,7 @@ require('dotenv').config();
 
 const app = express();
 const salt = bcrypt.genSaltSync(10);
-const secret = 'asdasfgasdasadsfsam';
+const secret = process.env.JWT_SECRET; // Use environment variable for secret
 const bucket = 'erick-blog';
 
 app.use(cors({ credentials: true, origin: "http://localhost:3000" }));

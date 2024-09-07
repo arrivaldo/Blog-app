@@ -7,28 +7,51 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const multer = require('multer');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
-const uploadMiddleware = multer({ dest: 'uploads/' });
 const salt = bcrypt.genSaltSync(10);
 const secret = 'asdasfgasdasadsfsam';
+const bucket = 'erick-blog';
 
 app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 app.use(express.json());
 app.use(cookieParser());
-app.use('/uploads', express.static(__dirname + '/uploads'));
+// app.use('/uploads', express.static(__dirname + '/uploads'));
 
 
 
-mongoose.connect(process.env.MONGODB_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-});  
-//K7vCgWgv8nL60hK
+async function uploadToS3(path, originalFilename, mimetype) {
+    const client = new S3Client({
+        region: 'us-east-2',
+        credentials: {
+            accessKeyId: process.env.S3_ACCESS_KEY,
+            secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+        },
+    });
+
+    const parts = originalFilename.split('.');
+    const ext = parts[parts.length - 1];
+    const newFilename = Date.now() + '.' + ext;
+
+    const data = await client.send(new PutObjectCommand({
+        Bucket: bucket,
+        Body: fs.readFileSync(path),
+        Key: newFilename,
+        ContentType: mimetype,
+        ACL: 'public-read',
+    }));
+
+    return `https://${bucket}.s3.amazonaws.com/${newFilename}`;
+}
 
 app.post('/register', async (req, res) => {
+    mongoose.connect(process.env.MONGODB_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    });
     const { username, password } = req.body;
     try {
         const userDoc = await User.create({
@@ -43,6 +66,10 @@ app.post('/register', async (req, res) => {
 });
 
 app.post('/login', async (req, res) => {
+    mongoose.connect(process.env.MONGODB_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    });
     const { username, password } = req.body;
     try {
         const userDoc = await User.findOne({ username });
@@ -68,6 +95,10 @@ app.post('/login', async (req, res) => {
 });
 
 app.get('/profile', (req, res) => {
+    mongoose.connect(process.env.MONGODB_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    });
     const { token } = req.cookies;
     jwt.verify(token, secret, {}, (err, info) => {
         if (err) throw err;
@@ -79,16 +110,19 @@ app.post('/logout', (req, res) => {
     res.cookie('token', '').json('ok');
 });
 
+const uploadMiddleware = multer({ dest: '/tmp' });
+
 app.post('/post', uploadMiddleware.single("file"), async (req, res) => {
+    mongoose.connect(process.env.MONGODB_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    });
     if (!req.file) {
         return res.status(400).json({ message: 'File upload failed' });
     }
 
-    const { originalname, path } = req.file;
-    const parts = originalname.split('.');
-    const ext = parts[parts.length - 1];
-    const newPath = path + '.' + ext;
-    fs.renameSync(path, newPath);
+    const { originalname, path, mimetype } = req.file;
+    const url = await uploadToS3(path, originalname, mimetype);
 
     const { token } = req.cookies;
     jwt.verify(token, secret, {}, async (err, info) => {
@@ -99,7 +133,7 @@ app.post('/post', uploadMiddleware.single("file"), async (req, res) => {
             title,
             summary,
             content,
-            cover: newPath,
+            cover: url,
             author: info.id,
         });
 
@@ -108,13 +142,16 @@ app.post('/post', uploadMiddleware.single("file"), async (req, res) => {
 });
 
 app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
-    let newPath = null;
+    mongoose.connect(process.env.MONGODB_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    });
+    let url = null;
+    
+    // Upload new file to S3 if a new file is provided
     if (req.file) {
-        const { originalname, path } = req.file;
-        const parts = originalname.split('.');
-        const ext = parts[parts.length - 1];
-        newPath = path + '.' + ext;
-        fs.renameSync(path, newPath);
+        const { originalname, path, mimetype } = req.file;
+        url = await uploadToS3(path, originalname, mimetype);
     }
 
     const { token } = req.cookies;
@@ -122,16 +159,21 @@ app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
         if (err) throw err;
         const { id, title, summary, content } = req.body;
         const postDoc = await Post.findById(id);
+        
+        // Verify if the user is the author
         const isAuthor = JSON.stringify(postDoc.author) === JSON.stringify(info.id);
         if (!isAuthor) {
             return res.status(400).json('you are not the author');
         }
-        
+
+        // Update post fields
         postDoc.title = title;
         postDoc.summary = summary;
         postDoc.content = content;
-        if (newPath) {
-            postDoc.cover = newPath;
+        
+        // Only update the cover if a new image was uploaded
+        if (url) {
+            postDoc.cover = url;
         }
 
         await postDoc.save();
@@ -140,8 +182,11 @@ app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
     });
 });
 
-
 app.get('/post', async (req, res) => {
+    mongoose.connect(process.env.MONGODB_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    });
     try {
         const posts = await Post.find()
             .populate('author', ['username'])
@@ -156,6 +201,10 @@ app.get('/post', async (req, res) => {
 });
 
 app.get('/post/:id', async (req, res) => {
+    mongoose.connect(process.env.MONGODB_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    });
     try {
         const { id } = req.params;
         const postDoc = await Post.findById(id).populate('author', ['username']);
@@ -169,12 +218,10 @@ app.get('/post/:id', async (req, res) => {
     }
 });
 
-
-
 app.listen(4000, () => {
     console.log('Server is running on port 4000');
 });
 
 app.use('/', (req, res) => {
-    res.send('Server is running')
-})
+    res.send('Server is running');
+});

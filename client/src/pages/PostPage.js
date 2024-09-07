@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { UserContext } from "../UserContext";
-
+import Image from '../Image'
 import { Link } from "react-router-dom";
 
 const PostPage = () => {
@@ -51,7 +51,10 @@ const PostPage = () => {
         </div>
       )}
       <div className="image">
-        <img src={`http://localhost:4000/${postInfo.cover}`} alt="Post Cover" />
+        {/* <img src={`http://localhost:4000/${postInfo.cover}`} alt="Post Cover" /> */}
+        <Image src={postInfo.cover} alt="Post Cover" />
+
+
       </div>
       <div className="summary-page">{postInfo.summary}</div>
       <div

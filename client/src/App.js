@@ -23,8 +23,8 @@ const App = () => {
   <div class="gradient-bg"></div>
 </div> */}
 
-<div class="container-bg">
-  <div class="grid-bg"></div>
+<div className="container-bg">
+  <div className="grid-bg"></div>
 </div>
 
 

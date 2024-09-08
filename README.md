@@ -1,4 +1,4 @@
-# MERM BLOG APP
+## MERN BLOG APP
 
 Lift server:
 npx nodemon index.js

@@ -21,11 +21,18 @@ This is a blog application built using the MERN (MongoDB, Express.js, React.js, 
 - **Database**: MongoDB Atlas
 - **Other Tools**: Mongoose (ODM), Axios, Vercel (deployment), Git
 
+
+![Post](post.png)
+
+
+
 ## Getting Started
 
 To get a local copy up and running, follow these simple steps:
 
-![Post](post.png)
+
+![Post-final](postfinal.png)
+
 
 
 ### Prerequisites
@@ -33,10 +40,8 @@ To get a local copy up and running, follow these simple steps:
 - **Node.js**: Install Node.js from [here](https://nodejs.org/).
 - **MongoDB Atlas**: Make sure you have a MongoDB Atlas account and a cluster set up.
 
+
 ![login](login.png)
-![create Post](create.png)
-
-
 
 
 
@@ -54,6 +59,13 @@ npx nodemon index.js
 
 Lift client: 
 npm start
+
+![create Post](create.png)
+
+
+
+
+
 
 
 

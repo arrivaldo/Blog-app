@@ -13,13 +13,6 @@ This is a blog application built using the MERN (MongoDB, Express.js, React.js, 
 
 
 ![Main Blog](main.png)
-![Post](post.png)
-![login](login.png)
-![create Post](create.png)
-
-
-
-
 
 ## Technologies Used
 
@@ -32,10 +25,20 @@ This is a blog application built using the MERN (MongoDB, Express.js, React.js, 
 
 To get a local copy up and running, follow these simple steps:
 
+![Post](post.png)
+
+
 ### Prerequisites
 
 - **Node.js**: Install Node.js from [here](https://nodejs.org/).
 - **MongoDB Atlas**: Make sure you have a MongoDB Atlas account and a cluster set up.
+
+![login](login.png)
+![create Post](create.png)
+
+
+
+
 
 ### Installation
 

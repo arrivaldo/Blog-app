@@ -14,8 +14,8 @@ This is a blog application built using the MERN (MongoDB, Express.js, React.js, 
 
 ![Main Blog](main.png)
 ![Post](post.png)
-![login](main.png)
-![create Post](main.png)
+![login](login.png)
+![create Post](create.png)
 
 
 
